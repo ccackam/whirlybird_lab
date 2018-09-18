@@ -132,14 +132,14 @@ class WhirlybirdSim():
 
     def dynamics(self, state, command):
         # Get parameters of ros param server
-        g  = self.g 
+        g  = self.g
         l1 = self.l1
         l2 = self.l2
         m1 = self.m1
         m2 = self.m2
-        d  = self.d 
-        h  = self.h 
-        r  = self.r 
+        d  = self.d
+        h  = self.h
+        r  = self.r
         Jx = self.Jx
         Jy = self.Jy
         Jz = self.Jz
@@ -171,7 +171,51 @@ class WhirlybirdSim():
 
         ################################################
         # Implement Dynamics for Accelerations Here    #
+        Q  = np.zeros((3,1))
+        Pd = np.zeros((3,1))
+        C  = np.zeros((3,1))
+        M  = np.zeros((3,3))
 
+        Q[0] = d*(fl-fr)
+        Q[1] = l1*(fl+fr)*cphi
+        Q[2] = l1*(fl+fr)*ctheta*sphi + d*(fr-fl)*stheta
+
+        Pd[0] = 0
+        Pd[1] = (m1*l1 - m2*l2)*g*ctheta
+        Pd[2] = 0
+
+        C[0] = -thetad**2*(Jz-Jy)*sphi*cphi \
+        + psid**2*(Jz-Jy)*sphi*cphi*ctheta**2 \
+        - thetad*psid*ctheta*(Jx - (Jz - Jy)*(cphi**2 - sphi**2))
+        C[1] = psid**2*stheta*ctheta \
+        * (-Jx + m1*l1**2 + m2*l2**2 + Jy*sphi**2 + Jz*cphi**2) \
+        - 2*phid*thetad*(Jz-Jy)*sphi*cphi \
+        - phid*psid*ctheta*(-Jx + (Jz-Jy)*(cphi**2-sphi**2))
+        C[2] = thetad**2*(Jz-Jy)*sphi*cphi*stheta \
+        - phid*thetad*ctheta*(Jx + (Jz-Jy)*(cphi**2-sphi**2)) \
+        - 2*phid*psid*(Jz-Jy)*ctheta**2*sphi*cphi \
+        + 2*thetad*psid*stheta*ctheta \
+        * (Jx - m1*l1**2 - m2*l2**2 - Jy*sphi**2 - Jz*cphi**2)
+
+        M[0,0] = Jx
+        M[0,1] = 0
+        M[0,2] = -Jx*stheta
+        M[1,0] = 0
+        M[1,1] = m1*l1**2 + m2*l2**2 + Jy*cphi**2 + Jz*sphi**2
+        M[1,2] = (Jy-Jz)*sphi*cphi*ctheta
+        M[2,0] = -Jx*stheta
+        M[2,1] = (Jy-Jz)*sphi*cphi*ctheta
+        M[2,2] = (m1*l1**2 + m2*l2**2 + Jy*sphi**2 + Jz*cphi**2)*ctheta**2 \
+        + Jx*stheta**2
+
+
+        a = np.zeros((3,3))
+        b = np.zeros((3,1))
+
+        for i in range(len(b)):
+            b[i] = Q[i] - C[i] - Pd[i]
+
+        xdot[3:6] = np.linalg.solve(M,b)
 
         ################################################
 
@@ -187,7 +231,7 @@ class WhirlybirdSim():
         psi = self.state[2]
 
         # accelerometer
-        accel = np.zeros((3,1)) 
+        accel = np.zeros((3,1))
 
         # rate gyro
         B = np.zeros((3,3))
@@ -198,7 +242,7 @@ class WhirlybirdSim():
         B[2,1] = -np.sin(phi)
         B[2,2] = np.cos(phi)*np.cos(theta)
 
-        gyro = B.dot(self.state[3:6]) 
+        gyro = B.dot(self.state[3:6])
         return (accel, gyro)
 
     def sat(x, max, min):
