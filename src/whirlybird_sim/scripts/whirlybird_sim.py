@@ -16,6 +16,11 @@ class WhirlybirdSim():
 
         self.initialized = False
 
+        # Constrain Dimension
+        self.constrain_phi = True
+        self.constrain_theta = False
+        self.constrain_psi = True
+
         # get parameters
         try:
             param_namespace = '/whirlybird'
@@ -152,6 +157,16 @@ class WhirlybirdSim():
         thetad = state[4]
         psid = state[5]
 
+        if self.constrain_phi:
+            phi = 0
+            phid = 0
+        if self.constrain_theta:
+            theta = np.pi/2
+            thetad = 0
+        if self.constrain_psi:
+            psi = 0
+            psid = 0
+
         # adjust forces for gains
         fl = km * command[0]
         fr = km * command[1]
@@ -216,6 +231,16 @@ class WhirlybirdSim():
             b[i] = Q[i] - C[i] - Pd[i]
 
         xdot[3:6] = np.linalg.solve(M,b)
+
+        if self.constrain_phi:
+            xdot[0] = 0
+            xdot[3] = 0
+        if self.constrain_theta:
+            xdot[2] = 0
+            xdot[4] = 0
+        if self.constrain_psi:
+            xdot[3] = 0
+            xdot[5] = 0
 
         ################################################
 
