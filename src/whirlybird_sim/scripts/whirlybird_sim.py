@@ -9,6 +9,11 @@ import numpy as np
 class WhirlybirdSim():
 
     def __init__(self):
+        # Constrain Dynamics
+        self.constrain_phi = False
+        self.constrain_theta = False
+        self.constrain_psi = False
+
         # initialize member variables
         self.state = np.zeros((6,1)) # [phi theta psi phid thetad psid]' = [q' qd']'
         self.command = np.zeros((2,1)) # [ul ur]'
@@ -152,6 +157,16 @@ class WhirlybirdSim():
         thetad = state[4]
         psid = state[5]
 
+        if self.constrain_phi:
+            phi = 0
+            phid = 0
+        if self.constrain_theta:
+            theta = 90*pi/180
+            thetad = 0
+        if self.constrain_psi:
+            psi = 0
+            psid = 0
+
         # adjust forces for gains
         fl = km * command[0]
         fr = km * command[1]
@@ -216,6 +231,19 @@ class WhirlybirdSim():
             b[i] = Q[i] - C[i] - Pd[i]
 
         xdot[3:6] = np.linalg.solve(M,b)
+
+        # Constrain Dynamics
+        if self.constrain_phi:
+            xdot[0] = 0
+            xdot[3] = 0
+        if self.constrain_theta:
+            xdot[1] = 0
+            xdot[4] = 0
+        if self.constrain_psi:
+            xdot[2] = 0
+            xdot[5] = 0
+
+
 
         ################################################
 
