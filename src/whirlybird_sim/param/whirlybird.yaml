@@ -9,7 +9,7 @@ r: 0.12
 Jx: 0.0047
 Jy: 0.0014
 Jz: 0.0041
-km: 100. # 0.063695 # Kameron Eves updated this on 10-2-18.
+km: 6.36946 # Kameron Eves updated this on 10-2-18.
 sigma_gyro: 8.7266e-5
 sigma_pixel: 0.05
 theta_max: 0.785398

@@ -15,6 +15,7 @@ import time
 from whirlybird_msgs.msg import Command
 from whirlybird_msgs.msg import Whirlybird
 from std_msgs.msg import Float32
+import numpy as np
 
 
 class Controller():
@@ -51,10 +52,12 @@ class Controller():
         self.prev_phi = 0.0
 
         # Pitch Gains
+        w0 = 2.75
+        zeta = 0.707
         self.theta_r = 0.0
-        self.P_theta_ = 0.0
+        self.P_theta_ = w0**2/(l1/(m1*l1**2 + m2*l2**2 + Jy))
         self.I_theta_ = 0.0
-        self.D_theta_ = 0.0
+        self.D_theta_ = 2*zeta*w0/(l1/(m1*l1**2 + m2*l2**2 + Jy))
         self.prev_theta = 0.0
         self.Int_theta = 0.0
 
@@ -68,7 +71,7 @@ class Controller():
 
         self.prev_time = rospy.Time.now()
 
-        self.Fe = 0.0 #Note this is not the correct value for Fe, you will have to find that yourself
+        self.Fe = (m1*l1 - m2*l2)*g/l1 #Note this is not the correct value for Fe, you will have to find that yourself
 
         self.command_sub_ = rospy.Subscriber('whirlybird', Whirlybird, self.whirlybirdCallback, queue_size=5)
         self.psi_r_sub_ = rospy.Subscriber('psi_r', Float32, self.psiRCallback, queue_size=5)
@@ -109,10 +112,17 @@ class Controller():
         now = rospy.Time.now()
         dt = (now-self.prev_time).to_sec()
         self.prev_time = now
-        
+
         ##################################
         # Implement your controller here
 
+        theta_dot = (theta - self.prev_theta)/dt
+        self.prev_theta = theta
+
+        F = self.P_theta_*(self.theta_r - theta) - self.D_theta_*theta_dot + (m1*l1 - m2*l2)*g/l1*np.cos(theta)
+
+        left_force = F/2.0
+        right_force = F/2.0
 
         ##################################
 
@@ -120,14 +130,14 @@ class Controller():
         l_out = left_force/km
         if(l_out < 0):
             l_out = 0
-        elif(l_out > 1.0):
-            l_out = 1.0
+        elif(l_out > 0.7):
+            l_out = 0.7
 
         r_out = right_force/km
         if(r_out < 0):
             r_out = 0
-        elif(r_out > 1.0):
-            r_out = 1.0
+        elif(r_out > 0.7):
+            r_out = 0.7
 
         # Pack up and send command
         command = Command()
