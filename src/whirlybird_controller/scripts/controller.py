@@ -119,7 +119,9 @@ class Controller():
         theta_dot = (theta - self.prev_theta)/dt
         self.prev_theta = theta
 
-        F = self.P_theta_*(self.theta_r - theta) - self.D_theta_*theta_dot + (m1*l1 - m2*l2)*g/l1*np.cos(theta)
+        F = self.P_theta_*(self.theta_r - theta) \
+         - self.D_theta_*theta_dot \
+         + (m1*l1 - m2*l2)*g/l1*np.cos(theta)
 
         left_force = F/2.0
         right_force = F/2.0
