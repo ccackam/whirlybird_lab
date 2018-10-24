@@ -17,9 +17,9 @@ class WhirlybirdSim():
         self.initialized = False
 
         # Constrain Dimension
-        self.constrain_phi = True
+        self.constrain_phi = False
         self.constrain_theta = False
-        self.constrain_psi = True
+        self.constrain_psi = False
 
         # get parameters
         try:

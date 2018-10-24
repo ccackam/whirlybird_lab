@@ -45,27 +45,35 @@ class Controller():
 
 
         # Roll Gains
-        self.P_phi_ = 0.0
+        t_r_phi = 0.3
+        zeta_phi = 0.707
+        self.P_phi_ = (2.2/t_r_phi)**2*Jx
         self.I_phi_ = 0.0
-        self.D_phi_ = 0.0
+        self.D_phi_ = 2*zeta_phi*(2.2/t_r_phi)*Jx
         self.Int_phi = 0.0
         self.prev_phi = 0.0
 
         # Pitch Gains
-        w0 = 2.75
-        zeta = 0.707
+        b_theta = l1/(m1*l1**2 + m2*l2**2 + Jy)
+        t_r_theta = 1.4
+        zeta_theta = 0.707
         self.theta_r = 0.0
-        self.P_theta_ = w0**2/(l1/(m1*l1**2 + m2*l2**2 + Jy))
+        self.P_theta_ = (2.2/t_r_theta)**2/(b_theta)
         self.I_theta_ = 0.0
-        self.D_theta_ = 2*zeta*w0/(l1/(m1*l1**2 + m2*l2**2 + Jy))
+        self.D_theta_ = 2*zeta_theta*(2.2/t_r_theta)/(b_theta)
         self.prev_theta = 0.0
         self.Int_theta = 0.0
 
         # Yaw Gains
+        M = 5
+        t_r_psi = M*t_r_phi
+        zeta_psi = 0.707
+        Fe = (m1*l1 - m2*l2)*g/l1
+        b_psi = l1*Fe/(m1*l1**2 + m2*l2**2 + Jz)
         self.psi_r = 0.0
-        self.P_psi_ = 0.0
+        self.P_psi_ = (2.2/t_r_psi)**2/(b_psi)
         self.I_psi_ = 0.0
-        self.D_psi_ = 0.0
+        self.D_psi_ = 2*zeta_psi*(2.2/t_r_psi)/(b_psi)
         self.prev_psi = 0.0
         self.Int_psi = 0.0
 
@@ -123,8 +131,20 @@ class Controller():
          - self.D_theta_*theta_dot \
          + (m1*l1 - m2*l2)*g/l1*np.cos(theta)
 
-        left_force = F/2.0
-        right_force = F/2.0
+        psi_dot = (psi - self.prev_psi)/dt
+        self.prev_psi = psi
+
+        phi_r = self.P_psi_*(self.psi_r - psi) \
+         - self.D_psi_*psi_dot
+
+        phi_dot = (phi - self.prev_phi)/dt
+        self.prev_phi = phi
+
+        Tau = self.P_phi_*(phi_r - phi) \
+         - self.D_phi_*phi_dot
+
+        left_force = F/2.0 + Tau/(2.0*d)
+        right_force = F/2.0 - Tau/(2.0*d)
 
         ##################################
 
