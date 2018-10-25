@@ -17,9 +17,9 @@ class WhirlybirdSim():
         self.initialized = False
 
         # Constrain Dimension
-        self.constrain_phi = False
-        self.constrain_theta = False
-        self.constrain_psi = False
+        self.constrain_phi = False # Roll
+        self.constrain_theta = False # Pitch
+        self.constrain_psi = False # Yaw
 
         # get parameters
         try:
@@ -161,7 +161,7 @@ class WhirlybirdSim():
             phi = 0
             phid = 0
         if self.constrain_theta:
-            theta = np.pi/2
+            theta = 0
             thetad = 0
         if self.constrain_psi:
             psi = 0
@@ -236,10 +236,10 @@ class WhirlybirdSim():
             xdot[0] = 0
             xdot[3] = 0
         if self.constrain_theta:
-            xdot[2] = 0
+            xdot[1] = 0
             xdot[4] = 0
         if self.constrain_psi:
-            xdot[3] = 0
+            xdot[2] = 0
             xdot[5] = 0
 
         ################################################
