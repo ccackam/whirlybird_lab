@@ -21,11 +21,6 @@ class WhirlybirdSim():
 
         self.initialized = False
 
-        # Constrain Dimension
-        self.constrain_phi = False # Roll
-        self.constrain_theta = False # Pitch
-        self.constrain_psi = False # Yaw
-
         # get parameters
         try:
             param_namespace = '/whirlybird'
@@ -162,7 +157,6 @@ class WhirlybirdSim():
         thetad = state[4]
         psid = state[5]
 
-<<<<<<< HEAD
         if self.constrain_phi:
             phi = 0
             phid = 0
@@ -173,19 +167,6 @@ class WhirlybirdSim():
             psi = 0
             psid = 0
 
-||||||| merged common ancestors
-=======
-        if self.constrain_phi:
-            phi = 0
-            phid = 0
-        if self.constrain_theta:
-            theta = 0
-            thetad = 0
-        if self.constrain_psi:
-            psi = 0
-            psid = 0
-
->>>>>>> ea145ae73c251c58311b1df668ba06b04eb89f2c
         # adjust forces for gains
         fl = km * command[0]
         fr = km * command[1]
@@ -251,7 +232,6 @@ class WhirlybirdSim():
 
         xdot[3:6] = np.linalg.solve(M,b)
 
-<<<<<<< HEAD
         # Constrain Dynamics
         if self.constrain_phi:
             xdot[0] = 0
@@ -265,19 +245,6 @@ class WhirlybirdSim():
 
 
 
-||||||| merged common ancestors
-=======
-        if self.constrain_phi:
-            xdot[0] = 0
-            xdot[3] = 0
-        if self.constrain_theta:
-            xdot[1] = 0
-            xdot[4] = 0
-        if self.constrain_psi:
-            xdot[2] = 0
-            xdot[5] = 0
-
->>>>>>> ea145ae73c251c58311b1df668ba06b04eb89f2c
         ################################################
 
         return xdot
