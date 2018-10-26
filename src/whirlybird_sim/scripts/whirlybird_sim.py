@@ -9,10 +9,6 @@ import numpy as np
 class WhirlybirdSim():
 
     def __init__(self):
-        # Constrain Dynamics
-        self.constrain_phi = False
-        self.constrain_theta = False
-        self.constrain_psi = False
 
         # initialize member variables
         self.state = np.zeros((6,1)) # [phi theta psi phid thetad psid]' = [q' qd']'
@@ -162,19 +158,6 @@ class WhirlybirdSim():
         thetad = state[4]
         psid = state[5]
 
-<<<<<<< HEAD
-        if self.constrain_phi:
-            phi = 0
-            phid = 0
-        if self.constrain_theta:
-            theta = 90*pi/180
-            thetad = 0
-        if self.constrain_psi:
-            psi = 0
-            psid = 0
-
-||||||| merged common ancestors
-=======
         if self.constrain_phi:
             phi = 0
             phid = 0
@@ -185,7 +168,6 @@ class WhirlybirdSim():
             psi = 0
             psid = 0
 
->>>>>>> ea145ae73c251c58311b1df668ba06b04eb89f2c
         # adjust forces for gains
         fl = km * command[0]
         fr = km * command[1]
@@ -251,7 +233,6 @@ class WhirlybirdSim():
 
         xdot[3:6] = np.linalg.solve(M,b)
 
-<<<<<<< HEAD
         # Constrain Dynamics
         if self.constrain_phi:
             xdot[0] = 0
@@ -262,22 +243,6 @@ class WhirlybirdSim():
         if self.constrain_psi:
             xdot[2] = 0
             xdot[5] = 0
-
-
-
-||||||| merged common ancestors
-=======
-        if self.constrain_phi:
-            xdot[0] = 0
-            xdot[3] = 0
-        if self.constrain_theta:
-            xdot[1] = 0
-            xdot[4] = 0
-        if self.constrain_psi:
-            xdot[2] = 0
-            xdot[5] = 0
-
->>>>>>> ea145ae73c251c58311b1df668ba06b04eb89f2c
         ################################################
 
         return xdot
