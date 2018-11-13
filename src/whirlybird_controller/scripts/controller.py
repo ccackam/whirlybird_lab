@@ -76,7 +76,7 @@ class Controller():
         # self.theta_ddot_old = [0.0];
 
         # Yaw Gains
-        M = 5
+        M = 10
         t_r_psi = M*t_r_phi
         zeta_psi = 0.707
         Fe = (m1*l1 - m2*l2)*g/l1
