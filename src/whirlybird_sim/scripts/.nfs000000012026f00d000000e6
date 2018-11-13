@@ -9,6 +9,10 @@ import numpy as np
 class WhirlybirdSim():
 
     def __init__(self):
+        # Constrain Dynamics
+        self.constrain_phi = False
+        self.constrain_theta = False
+        self.constrain_psi = False
 
         # initialize member variables
         self.state = np.zeros((6,1)) # [phi theta psi phid thetad psid]' = [q' qd']'
@@ -16,11 +20,6 @@ class WhirlybirdSim():
         self.command_esc = np.zeros((2,1)) # command throttled to ESC rate with zero-order hold
 
         self.initialized = False
-
-        # Constrain Dimension
-        self.constrain_phi = False # Roll
-        self.constrain_theta = False # Pitch
-        self.constrain_psi = False # Yaw
 
         # get parameters
         try:
@@ -162,7 +161,7 @@ class WhirlybirdSim():
             phi = 0
             phid = 0
         if self.constrain_theta:
-            theta = 0
+            theta = 90*pi/180
             thetad = 0
         if self.constrain_psi:
             psi = 0
@@ -243,6 +242,9 @@ class WhirlybirdSim():
         if self.constrain_psi:
             xdot[2] = 0
             xdot[5] = 0
+
+
+
         ################################################
 
         return xdot

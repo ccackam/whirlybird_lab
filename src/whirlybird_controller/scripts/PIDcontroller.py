@@ -61,7 +61,7 @@ class Controller():
 
         # Pitch Gains
         b_theta = l1/(m1*l1**2 + m2*l2**2 + Jy)
-        t_r_theta = 1.4
+        t_r_theta = 1.0
         zeta_theta = 0.707
         self.sigma_theta = 0.05
         self.theta_r = 0.0
@@ -81,11 +81,11 @@ class Controller():
         t_r_psi = M*t_r_phi
         zeta_psi = 0.707
         Fe = (m1*l1 - m2*l2)*g/l1
-        b_psi = l1*Fe/(m1*l1**2 + m2*l2**2 + Jz)
+        b_psi = l1*Fe/(m1*l1**2 + m2*l2 **2 + Jz)
         self.sigma_psi = 0.05
         self.psi_r = 0.0
         self.P_psi_ = (2.2/t_r_psi)**2/(b_psi)
-        self.I_psi_ = 0.05
+        self.I_psi_ = 0.01
         self.D_psi_ = 2*zeta_psi*(2.2/t_r_psi)/(b_psi)
         self.prev_psi = 0.0
         self.Int_psi = 0.0
@@ -209,10 +209,14 @@ class Controller():
         F_sat = sat[0]
         Tau_sat = sat[1]
 
-        if self.I_theta_ > 0:
-            self.Int_theta += dt/self.I_theta_*(F_sat-F_unsat)
-        if self.I_psi_ > 0:
-            self.Int_psi += dt/self.I_psi_*(Tau_sat-Tau_unsat)
+        # if self.I_theta_ > 0:
+        #     self.Int_theta += dt/self.I_theta_*(F_sat-F_unsat)
+        # else:
+        #     self.Int_theta -= dt/self.I_theta_*(F_sat-F_unsat)
+        # if self.I_psi_ > 0:
+        #     self.Int_psi += dt/self.I_psi_*(Tau_sat-Tau_unsat)
+        # else:
+        #     self.Int_psi += dt/self.I_psi_*(Tau_sat-Tau_unsat)
 
         f_sat = self.F2f(F_sat,Tau_sat)
         f_l_sat = f_sat[0]
