@@ -342,7 +342,7 @@ class Controller():
 
 
 if __name__ == '__main__':
-    rospy.init_node('controller', anonymous=True)
+    rospy.init_node('PIDcontroller', anonymous=True)
     try:
         controller = Controller()
     except:

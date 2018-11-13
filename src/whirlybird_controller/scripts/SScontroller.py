@@ -217,11 +217,6 @@ class Controller():
         u = kr*r-np.matmul(K,x)
         return u
 
-
-
-
-        return output
-
     def saturate(self,F,Tau):
 
         individual_forces = self.F2f(F,Tau)
@@ -292,7 +287,7 @@ class Controller():
 
 if __name__ == '__main__':
 
-    rospy.init_node('controller', anonymous=True)
+    rospy.init_node('SScontroller', anonymous=True)
     try:
         controller = Controller()
 
