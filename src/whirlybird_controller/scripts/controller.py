@@ -49,30 +49,37 @@ class Controller():
 
 
         # Controller
-        self.controller = 'PID'
+        self.controller = 'SS'
 
         if self.controller == 'SS':
-            self.A_lat = [[0,0,1,0],[0,0,0,1],[0,0,0,0],[l1*self.Fe/(Jm+Jz),0,0,0]]
-            self.B_lat = [[0],[0],[1/Jx],[0]]
+            self.A_lat = [[0,0,1,0,0],[0,0,0,1,0],[0,0,0,0,0],[l1*self.Fe/(Jm+Jz),0,0,0,0],[0,-1,0,0,0]]
+            self.B_lat = [[0],[0],[1/Jx],[0],[0]]
             self.C_lat = [[1,0,0,0],[0,1,0,0]]
-            if 4 != np.linalg.matrix_rank(control.ctrb(self.A_lat,self.B_lat)):
+            if 5 != np.linalg.matrix_rank(control.ctrb(self.A_lat,self.B_lat)):
                 print 'Not controlable!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
 
 
 
-            self.A_lon = [[0,1],[(m1*l1-m2*l2)*g*np.sin(0)/(Jm + Jy),0]]
-            self.B_lon = [[0],[l1/(Jm + Jy)]]
+            self.A_lon = [[0,1,0],[(m1*l1-m2*l2)*g*np.sin(0)/(Jm + Jy),0,0],[-1,0,0]]
+            self.B_lon = [[0],[l1/(Jm + Jy)],[0]]
             self.C_lon = [[1,0]]
-            if 2 != np.linalg.matrix_rank(control.ctrb(self.A_lon,self.B_lon)):
+            if 3 != np.linalg.matrix_rank(control.ctrb(self.A_lon,self.B_lon)):
                 print 'Not controlable!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
 
             # Pitch Gains
             t_r_theta = 1.4
             zeta_theta = 0.707
             w_n_theta = 2.2/t_r_theta
-            poles_lon = np.roots([1,2*zeta_theta*w_n_theta,w_n_theta**2])
-            self.K_lon = control.place(self.A_lon,self.B_lon,poles_lon)
-            self.kr_lon = -1/(np.matmul(self.C_lon,np.matmul(np.linalg.inv(np.subtract(self.A_lon,np.matmul(self.B_lon,self.K_lon))),self.B_lon)))
+            p_i_lon = -5#-w_n_theta/2.0
+            theta_poles = np.roots([1,2*zeta_theta*w_n_theta,w_n_theta**2])
+            poles_lon = []
+            for pole in theta_poles:
+                poles_lon.append(pole)
+            poles_lon.append(p_i_lon)
+            K = control.place(self.A_lon,self.B_lon,poles_lon)
+            self.kr_lon = K[0,2]
+            self.K_lon = K[0,0:2]
+            #self.kr_lon = -1/(np.matmul(self.C_lon,np.matmul(np.linalg.inv(np.subtract(self.A_lon,np.matmul(self.B_lon,self.K_lon))),self.B_lon)))
 
             # Yaw Gains
             t_r_phi = 0.3
@@ -82,6 +89,7 @@ class Controller():
             zeta_psi = 0.707
             w_n_phi = 2.2/t_r_phi
             w_n_psi = 2.2/t_r_psi
+            p_i_lat = -5#-w_n_psi/2.0
             phi_poles = np.roots([1,2*zeta_phi*w_n_phi,w_n_phi**2])
             psi_poles = np.roots([1,2*zeta_psi*w_n_psi,w_n_psi**2])
             poles_lat = []
@@ -89,8 +97,11 @@ class Controller():
                 poles_lat.append(pole)
             for pole in psi_poles:
                 poles_lat.append(pole)
-            self.K_lat = control.place(self.A_lat,self.B_lat,poles_lat)
-            self.kr_lat = -1/(np.matmul(self.C_lat[1],np.matmul(np.linalg.inv(np.subtract(self.A_lat,np.matmul(self.B_lat,self.K_lat))),self.B_lat)))
+            poles_lat.append(p_i_lat)
+            K = control.place(self.A_lat,self.B_lat,poles_lat)
+            self.kr_lat = K[0,4]
+            self.K_lat = K[0,0:4]
+            #self.kr_lat = -1/(np.matmul(self.C_lat[1],np.matmul(np.linalg.inv(np.subtract(self.A_lat,np.matmul(self.B_lat,self.K_lat))),self.B_lat)))
 
             # Dirty Derivative gains
             self.sigma_theta = 0.05
@@ -104,6 +115,17 @@ class Controller():
             self.theta_doto = 0
             self.phi_doto = 0
             self.psi_doto = 0
+            self.Int_theta = 0.0
+            self.error_theta = 0.0
+            self.Int_psi = 0.0
+            self.error_psi = 0.0
+
+            self.psi_vlim = 0.05
+            self.theta_vlim = 0.05
+            self.theta_r = 0;
+            self.psi_r = 0;
+
+
 
 
         elif self.controller == 'PID':
@@ -218,8 +240,17 @@ class Controller():
             x_lon = [[theta],[self.theta_doto]]
             x_lat = [[phi],[psi],[self.phi_doto],[self.psi_doto]]
 
-            F_unsat = self.SS(self.K_lon,x_lon,self.kr_lon,self.theta_r) + (m1*l1 - m2*l2)*g/l1*np.cos(theta)
-            Tau_unsat = self.SS(self.K_lat,x_lat,self.kr_lat,self.psi_r)
+            error_lon = self.theta_r-theta;
+
+            output = self.SS(self.K_lon,x_lon,self.kr_lon,self.theta_r,self.Int_theta,self.error_theta,error_lon,self.theta_doto,self.theta_vlim,dt)
+            F_unsat = output['u']  + (m1*l1 - m2*l2)*g/l1*np.cos(theta)
+            self.Int_theta = output['ui']
+            self.error_theta = output['e']
+            error_lat = self.psi_r-psi
+            output = self.SS(self.K_lat,x_lat,self.kr_lat,self.psi_r,self.Int_psi,self.error_psi,error_lat,self.theta_doto,self.psi_vlim,dt)
+            Tau_unsat = output['u']
+            self.Int_psi = output['ui']
+            self.error_psi = output['e']
 
         elif self.controller == 'PID':
             # Longitudinal
@@ -357,9 +388,18 @@ class Controller():
         output = {'u':u,'ui':ui,'ud':ud,'e':e,'x':x}
         return output
 
-    def SS(self,K,x,kr,r):
-        u = kr*r-np.matmul(K,x)
-        return u
+    def SS(self,K,x,kr,r,uio,eo,e,ud,xdot_lim,dt):
+
+        if (np.abs(ud) < xdot_lim): # and flag:
+            ui = uio + dt/2*(e + eo)
+        else:
+            ui = uio
+
+        u = -kr*ui-np.matmul(K,x)
+        #u = kr*r-np.matmul(K,x)
+        output = {'u':u,'ui':ui,'e':e}
+        return output
+        #return u
 
     def saturate(self,F,Tau):
 
